@@ -1,0 +1,21 @@
+name: RDP_Windows_Final_V4
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Install Ngrok via Choco
+      run: choco install ngrok
+    - name: Auth Ngrok
+      run: ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+    - name: Setup User Admin
+      run: |
+        net user admin Admin123! /add
+        net localgroup administrators admin /add
+    - name: Enable Remote Desktop
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+    - name: Start Tunnel
+      run: ngrok tcp 3389
